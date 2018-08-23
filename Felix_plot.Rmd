@@ -1,0 +1,57 @@
+---
+title: "Felix_plot"
+author: 'Fei Ren (ID: 704456634)'
+date: "April 28, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Plot `clicks` againt `jobAgeDays`
+```{r}
+library(arules)
+
+# load cleaned sample data
+setwd(dir = "E:/Programs and Activities/Datafest 2018/Data")
+load(file = "IndeedSampleclean")
+indeedClean <- IndeedSample
+rm(IndeedSample)
+
+# subset US data
+usIndeed <- filter(.data = indeedClean, country == "US")
+
+min <- min(usIndeed$jobAgeDays)
+max <- max(usIndeed$jobAgeDays)
+usIndeed$jobAgeDays_byWeek <- cut(x = usIndeed$jobAgeDays, breaks = c( seq(min-1,max,7),max))
+
+click_week_avg<- usIndeed %>% group_by(jobAgeDays_byWeek) %>% summarise(avg_click = mean(clicks))
+click_week_avg$jobAgeDays_byWeek <- 1:length(click_week_avg$jobAgeDays_byWeek)
+
+```
+
+```{r ggplot}
+library(ggplot2)
+
+p <- ggplot(data = click_week_avg, mapping = aes(x = jobAgeDays_byWeek, y = avg_click)) +
+  geom_point() +
+  geom_smooth(se = F, colour = "blue") +
+  scale_x_continuous(breaks = 1:length(click_week_avg$jobAgeDays_byWeek)) +
+  ylab("Weekly Click Average") +
+  xlab("Week") +
+  labs(title = "US Weekly Clicks") 
+
+ggsave(filename = "p.png", width = 5, height = 3)
+  # geom_boxplot(outlier.alpha = 0.1) +
+  # geom_ribbon()
+  # stat_smooth(method = "loess", level = 0.5)
+  # geom_line(stat = "mean")
+
+# indeedClean$month <- months(indeedClean$date)
+# clickMoAvg <- indeedClean %>% group_by(month) %>% summarise(mon_avg = mean(clicks))
+
+# qplot(x = month, y = mon_avg, data = clickMoAvg)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
